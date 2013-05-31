@@ -3,6 +3,11 @@ CryptoJS v3.1.2
 code.google.com/p/crypto-js
 (c) 2009-2013 by Jeff Mott. All rights reserved.
 code.google.com/p/crypto-js/wiki/License
+
+----------
+Modified by Óscar de Arriba adding the function 
+for convert a WordArray to an ArrayBuffer object.
+----------
 */
 (function () {
     // Check if typed arrays are supported
@@ -59,4 +64,30 @@ code.google.com/p/crypto-js/wiki/License
     };
 
     subInit.prototype = WordArray;
+
+    var toArrayBuffer = WordArray.toArrayBuffer = function () {
+        var view = new Int8Array(this.sigBytes);
+
+        // Bonary moves to conver 32-bit words to bytes
+        for (var n_word = 0; n_word < this.words.length; n_word++){
+            word = this.words[n_word]
+
+            var byte_3 = (word >>> 24);
+            var byte_2 = (word >>> 16) - (byte_3 << 8);
+            var byte_1 = (word >>> 8) - (byte_3 << 16) - (byte_2 << 8);
+            var byte_0 = (word) - (byte_3 << 24) - (byte_2 << 16) - (byte_1 << 8);
+
+            // Add them to the ArrayBuffer
+            view[n_word*4] = byte_3;
+            view[n_word*4+1] = byte_2;
+            view[n_word*4+2] = byte_1;
+            view[n_word*4+3] = byte_0;
+
+        }
+
+        // Return to the caller :)
+        return view.buffer;
+    };
+
+    toArrayBuffer.prototype = WordArray;
 }());
